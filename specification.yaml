@@ -1,0 +1,222 @@
+openapi: 3.0.2
+
+info:
+  title: Hiring Profile Management Specification
+  description: >
+    An interface specification for a server that manages potential employee
+    profiles.
+  contact:
+    name: Daniel Maurice Davis
+    email: Daniel.Maurice.Davis@gmail.com
+  license:
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  version: 1.0.0
+
+tags:
+  - name: Authentication
+    description: >
+      Server authentication operations.
+  - name: Profile
+    description: >
+      Profile accesss operations.
+
+servers:
+  - url: https://hireprofilemanager.danielmauricedavis.me/v1
+    description: Example Server
+  - url: "{protocol}://{host}:{port}/{basePath}"
+    description: User Defined
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+      host:
+        default: "127.0.0.1"
+      port:
+        default: "43815"
+      basePath:
+        default: "v1"
+
+paths:
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login
+      description: >
+        Attempt to authenticate with the server.
+      operationId: login
+      requestBody:
+        $ref: "#/components/requestBodies/AuthenticationRequest"
+      responses:
+        200:
+          description: >
+            Authentication succeeded.
+          content:
+            application/json:
+              schema:
+                type: string
+        401:
+          description: >
+            Authentication failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /profiles:
+    get:
+      tags:
+        - Profile
+      summary: Get profiles.
+      description: >
+        Request available hire profiles.
+      operationId: getProfiles
+      responses:
+        200:
+          description: >
+            A list of basic profile information.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfileAbstract"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+      security:
+        - bearerAuthentication: []
+  /profiles/{profileId}:
+    parameters:
+      - $ref: "#/components/parameters/ProfileIdentifier"
+    get:
+      tags:
+        - Profile
+      summary: Get a profile
+      description: >
+        Request a profile.
+      operationId: getProfile
+      responses:
+        200:
+          description: A profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+      security:
+        - bearerAuthentication: []
+
+components:
+  schemas:
+    ProblemDetails:
+      type: object
+      required:
+        - title
+        - status
+        - details
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        details:
+          type: string
+        instance:
+          type: string
+
+    Credentials:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          pattern: ^[^\s]+$
+          maxLength: 25
+        password:
+          type: string
+          pattern: ^[^\s]+$
+          minLength: 8
+          maxLength: 100
+          writeOnly: true
+
+    ProfileAbstract:
+      type: object
+      required:
+        - profileId
+        - firstname
+        - lastname
+        - position
+      properties:
+        profileId:
+          type: integer
+          format: int64
+          minimum: 0
+        firstname:
+          type: string
+        lastname:
+          type: string
+        position:
+          type: string
+
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/ProfileAbstract"
+        - type: object
+          properties:
+            PhoneNumber:
+              type: string
+            Email:
+              type: string
+            Birth:
+              type: string
+              format: date
+
+  parameters:
+    ProfileIdentifier:
+      name: profileId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 0
+      description: The profille identifier.
+
+  requestBodies:
+    AuthenticationRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Credentials"
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+
+  securitySchemes:
+    bearerAuthentication:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
