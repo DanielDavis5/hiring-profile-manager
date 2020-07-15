@@ -1,0 +1,331 @@
+{
+  "openapi" : "3.0.2",
+  "info" : {
+    "contact" : {
+      "email" : "Daniel.Maurice.Davis@gmail.com",
+      "name" : "Daniel Maurice Davis"
+    },
+    "description" : "An interface specification for a server that manages potential employee profiles.\n",
+    "license" : {
+      "name" : "AGPLv3",
+      "url" : "https://www.gnu.org/licenses/agpl-3.0.html"
+    },
+    "title" : "Hiring Profile Management Specification",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "description" : "Example Server",
+    "url" : "https://hireprofilemanager.danielmauricedavis.me/v1"
+  }, {
+    "description" : "User Defined",
+    "url" : "{protocol}://{host}:{port}/{basePath}",
+    "variables" : {
+      "protocol" : {
+        "default" : "https",
+        "enum" : [ "http", "https" ]
+      },
+      "host" : {
+        "default" : "127.0.0.1"
+      },
+      "port" : {
+        "default" : "43815"
+      },
+      "basePath" : {
+        "default" : "v1"
+      }
+    }
+  } ],
+  "tags" : [ {
+    "description" : "Server authentication operations.\n",
+    "name" : "Authentication"
+  }, {
+    "description" : "Profile accesss operations.\n",
+    "name" : "Profile"
+  } ],
+  "paths" : {
+    "/login" : {
+      "post" : {
+        "description" : "Attempt to authenticate with the server.\n",
+        "operationId" : "login",
+        "requestBody" : {
+          "$ref" : "#/components/requestBodies/AuthenticationRequest"
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "Authentication succeeded.\n"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description" : "Authentication failed.\n"
+          }
+        },
+        "summary" : "Login",
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/profiles" : {
+      "get" : {
+        "description" : "Request available hire profiles.\n",
+        "operationId" : "getProfiles",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProfileAbstract"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "A list of basic profile information.\n"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description" : "Unauthorized"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description" : "Forbidden"
+          }
+        },
+        "security" : [ {
+          "bearerAuthentication" : [ ]
+        } ],
+        "summary" : "Get profiles.",
+        "tags" : [ "Profile" ]
+      }
+    },
+    "/profiles/{profileId}" : {
+      "get" : {
+        "description" : "Request a profile.\n",
+        "operationId" : "getProfile",
+        "parameters" : [ {
+          "description" : "The profille identifier.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "profileId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "minimum" : 0,
+            "type" : "integer"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description" : "A profile."
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description" : "Unauthorized"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description" : "Forbidden"
+          }
+        },
+        "security" : [ {
+          "bearerAuthentication" : [ ]
+        } ],
+        "summary" : "Get a profile",
+        "tags" : [ "Profile" ]
+      }
+    }
+  },
+  "components" : {
+    "parameters" : {
+      "ProfileIdentifier" : {
+        "description" : "The profille identifier.",
+        "explode" : false,
+        "in" : "path",
+        "name" : "profileId",
+        "required" : true,
+        "schema" : {
+          "format" : "int64",
+          "minimum" : 0,
+          "type" : "integer"
+        },
+        "style" : "simple"
+      }
+    },
+    "requestBodies" : {
+      "AuthenticationRequest" : {
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/Credentials"
+            }
+          }
+        }
+      }
+    },
+    "responses" : {
+      "Unauthorized" : {
+        "content" : {
+          "application/problem+json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ProblemDetails"
+            }
+          }
+        },
+        "description" : "Unauthorized"
+      },
+      "Forbidden" : {
+        "content" : {
+          "application/problem+json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ProblemDetails"
+            }
+          }
+        },
+        "description" : "Forbidden"
+      }
+    },
+    "schemas" : {
+      "ProblemDetails" : {
+        "properties" : {
+          "type" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "integer"
+          },
+          "details" : {
+            "type" : "string"
+          },
+          "instance" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "details", "status", "title" ],
+        "type" : "object"
+      },
+      "Credentials" : {
+        "example" : {
+          "password" : "password",
+          "username" : "username"
+        },
+        "properties" : {
+          "username" : {
+            "maxLength" : 25,
+            "pattern" : "^[^\\s]+$",
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 100,
+            "minLength" : 8,
+            "pattern" : "^[^\\s]+$",
+            "type" : "string",
+            "writeOnly" : true
+          }
+        },
+        "required" : [ "password", "username" ],
+        "type" : "object"
+      },
+      "ProfileAbstract" : {
+        "example" : {
+          "firstname" : "firstname",
+          "profileId" : 0,
+          "position" : "position",
+          "lastname" : "lastname"
+        },
+        "properties" : {
+          "profileId" : {
+            "format" : "int64",
+            "minimum" : 0,
+            "type" : "integer"
+          },
+          "firstname" : {
+            "type" : "string"
+          },
+          "lastname" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "firstname", "lastname", "position", "profileId" ],
+        "type" : "object"
+      },
+      "Profile" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/ProfileAbstract"
+        }, {
+          "$ref" : "#/components/schemas/Profile_allOf"
+        } ]
+      },
+      "Profile_allOf" : {
+        "properties" : {
+          "PhoneNumber" : {
+            "type" : "string"
+          },
+          "Email" : {
+            "type" : "string"
+          },
+          "Birth" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuthentication" : {
+        "bearerFormat" : "JWT",
+        "scheme" : "bearer",
+        "type" : "http"
+      }
+    }
+  }
+}
